@@ -1,12 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="style.css">
-    <title>My First Website</title>
+  <meta charset="UTF-8" />
+  <title>Ping Pong</title>
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      font-family: monospace;
+    }
+    canvas {
+      border: 2px solid #fff;
+    }
+    #score {
+      position: absolute;
+      top: 20px;
+      color: white;
+      font-size: 24px;
+    }
+  </style>
 </head>
 <body>
-    <h1>Hello, this is my first website!</h1>
-    <p>Deployed using GitHub Pages.</p>
+  <div id="score">0 : 0</div>
+  <canvas id="game" width="600" height="400"></canvas>
+  <script>
+    const cvs = document.getElementById("game");
+    const ctx = cvs.getContext("2d");
+
+    const user = {
+      x: 0,
+      y: cvs.height / 2 - 50,
+      width: 10,
+      height: 100,
+      color: "#fff",
+      score: 0
+    };
+
+    const com = {
+      x: cvs.width - 10,
+      y: cvs.height / 2 - 50,
+      width: 10,
+      height: 100,
+      color: "#fff",
+      score: 0
+    };
+
+    const ball = {
+      x: cvs.width / 2,
+      y: cvs.height / 2,
+      r: 10,
+      speed: 5,
+      vx: 5,
+      vy: 5,
+      color: "#fff"
+    };
+
+    const net = {
+      x: cvs.width / 2 - 1,
+      y: 0,
+      width: 2,
+      height: 10,
+      color: "#fff"
+    };
+
+    function drawRect(x, y, w, h, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, w, h);
+    }
+
+    function drawCircle(x, y, r, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, 2 * Math.PI);
+      ctx.fill();
+    }
+
+    function drawNet() {
+      for (let i = 0; i < cvs.height; i += 15) {
+        drawRect(net.x, i, net.width, net.height, net.color);
+      }
+    }
+
+    function drawText(text, x, y, color = "#fff") {
+      ctx.fillStyle = color;
+      ctx.font = "45px monospace";
+      ctx.textAlign = "center";
+      ctx.fillText(text, x, y);
+    }
+
+    function updateScore() {
+      document.getElementById("score").textContent = `${user.score} : ${com.score}`;
+    }
+
+    function resetBall() {
+      ball.x = cvs.width / 2;
+      ball.y = cvs.height / 2;
+      ball.vx = -ball.vx;
+      ball.speed = 5;
+    }
+
+    function collision(b, p) {
+      return (
+        b.y + b.r > p.y &&
+        b.y - b.r < p.y + p.height &&
+        b.x + b.r > p.x &&
+        b.x - b.r < p.x + p.width
+      );
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowUp" && user.y > 0) {
+        user.y -= 20;
+      } else if (e.key === "ArrowDown" && user.y < cvs.height - user.height) {
+        user.y += 20;
+      }
+    });
+
+    function computerAI() {
+      const targetY = ball.y - (com.height / 2);
+      const diff = (targetY - com.y) * 0.1;
+      com.y += diff;
+    }
+
+    function gameLoop() {
+      drawRect(0, 0, cvs.width, cvs.height, "#000");
+
+      drawNet();
+      drawRect(user.x, user.y, user.width, user.height, user.color);
+      drawRect(com.x, com.y, com.width, com.height, com.color);
+
+      drawCircle(ball.x, ball.y, ball.r, ball.color);
+
+      // Move ball
+      ball.x += ball.vx;
+      ball.y += ball.vy;
+
+      // Top/bottom collision
+      if (ball.y - ball.r < 0 || ball.y + ball.r > cvs.height) {
+        ball.vy = -ball.vy;
+      }
+
+      // AI side
+      const player = ball.x < cvs.width / 2 ? user : com;
+      if (collision(ball, player)) {
+        let collidePoint = (ball.y - (player.y + player.height / 2)) / (player.height / 2);
+        let angleRad = (Math.PI / 4) * collidePoint;
+
+        let direction = ball.x < cvs.width / 2 ? 1 : -1;
+
+        ball.vx = direction * ball.speed * Math.cos(angleRad);
+        ball.vy = ball.speed * Math.sin(angleRad);
+
+        ball.speed += 0.2;
+      }
+
+      // Score
+      if (ball.x + ball.r > cvs.width) {
+        user.score++;
+        updateScore();
+        resetBall();
+      } else if (ball.x - ball.r < 0) {
+        com.score++;
+        updateScore();
+        resetBall();
+      }
+
+      computerAI();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    updateScore();
+    gameLoop();
+  </script>
 </body>
 </html>

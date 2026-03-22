@@ -38,7 +38,8 @@
       width: 10,
       height: 100,
       color: "#fff",
-      score: 0
+      score: 0,
+      speed: 8
     };
 
     const com = {
@@ -66,6 +67,12 @@
       width: 2,
       height: 10,
       color: "#fff"
+    };
+
+    // Keys state
+    const keys = {
+      up: false,
+      down: false
     };
 
     function drawRect(x, y, w, h, color) {
@@ -113,13 +120,24 @@
       );
     }
 
+    // Handle key press / release
     document.addEventListener("keydown", (e) => {
-      if (e.key === "ArrowUp" && user.y > 0) {
-        user.y -= 20;
-      } else if (e.key === "ArrowDown" && user.y < cvs.height - user.height) {
-        user.y += 20;
-      }
+      if (e.key === "ArrowUp") keys.up = true;
+      if (e.key === "ArrowDown") keys.down = true;
     });
+    document.addEventListener("keyup", (e) => {
+      if (e.key === "ArrowUp") keys.up = false;
+      if (e.key === "ArrowDown") keys.down = false;
+    });
+
+    function moveUserPaddle() {
+      if (keys.up && user.y > 0) {
+        user.y -= user.speed;
+      }
+      if (keys.down && user.y < cvs.height - user.height) {
+        user.y += user.speed;
+      }
+    }
 
     function computerAI() {
       const targetY = ball.y - (com.height / 2);
@@ -136,6 +154,9 @@
 
       drawCircle(ball.x, ball.y, ball.r, ball.color);
 
+      // Move paddle first (before drawing ball)
+      moveUserPaddle();
+
       // Move ball
       ball.x += ball.vx;
       ball.y += ball.vy;
@@ -145,7 +166,7 @@
         ball.vy = -ball.vy;
       }
 
-      // AI side
+      // Left / right side (paddles)
       const player = ball.x < cvs.width / 2 ? user : com;
       if (collision(ball, player)) {
         let collidePoint = (ball.y - (player.y + player.height / 2)) / (player.height / 2);

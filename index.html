@@ -39,7 +39,7 @@
       height: 100,
       color: "#fff",
       score: 0,
-      speed: 8
+      speed: 5          // ← slower paddle movement
     };
 
     const com = {
@@ -55,9 +55,9 @@
       x: cvs.width / 2,
       y: cvs.height / 2,
       r: 10,
-      speed: 5,
-      vx: 5,
-      vy: 5,
+      speed: 3,          // ← slower initial ball speed
+      vx: 3,             // ← reduced horizontal speed
+      vy: 3,             // ← reduced vertical speed
       color: "#fff"
     };
 
@@ -69,7 +69,6 @@
       color: "#fff"
     };
 
-    // Keys state
     const keys = {
       up: false,
       down: false
@@ -107,8 +106,8 @@
     function resetBall() {
       ball.x = cvs.width / 2;
       ball.y = cvs.height / 2;
-      ball.vx = -ball.vx;
-      ball.speed = 5;
+      ball.vx = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
+      ball.vy = (Math.random() > 0.5 ? 1 : -1) * ball.speed;
     }
 
     function collision(b, p) {
@@ -120,7 +119,6 @@
       );
     }
 
-    // Handle key press / release
     document.addEventListener("keydown", (e) => {
       if (e.key === "ArrowUp") keys.up = true;
       if (e.key === "ArrowDown") keys.down = true;
@@ -154,19 +152,15 @@
 
       drawCircle(ball.x, ball.y, ball.r, ball.color);
 
-      // Move paddle first (before drawing ball)
       moveUserPaddle();
 
-      // Move ball
       ball.x += ball.vx;
       ball.y += ball.vy;
 
-      // Top/bottom collision
       if (ball.y - ball.r < 0 || ball.y + ball.r > cvs.height) {
         ball.vy = -ball.vy;
       }
 
-      // Left / right side (paddles)
       const player = ball.x < cvs.width / 2 ? user : com;
       if (collision(ball, player)) {
         let collidePoint = (ball.y - (player.y + player.height / 2)) / (player.height / 2);
@@ -177,10 +171,10 @@
         ball.vx = direction * ball.speed * Math.cos(angleRad);
         ball.vy = ball.speed * Math.sin(angleRad);
 
-        ball.speed += 0.2;
+        // Optional: make it speed up very slowly
+        ball.speed += 0.05;
       }
 
-      // Score
       if (ball.x + ball.r > cvs.width) {
         user.score++;
         updateScore();
